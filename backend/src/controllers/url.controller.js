@@ -8,9 +8,6 @@ const shortenUrl = async (req, res) => {
   try {
     const { originalUrl } = req.body;
 
-    console.log("========== CREATE SHORT URL ==========");
-    console.log("Request Body:", req.body);
-
     if (!originalUrl) {
       return res.status(400).json({
         success: false,
@@ -20,8 +17,6 @@ const shortenUrl = async (req, res) => {
 
     const shortCode = nanoid(7);
 
-    console.log("Generated Short Code:", shortCode);
-
     const url = await prisma.url.create({
       data: {
         originalUrl,
@@ -30,21 +25,105 @@ const shortenUrl = async (req, res) => {
       },
     });
 
-    console.log("URL Saved Successfully");
-    console.log(url);
-
     return res.status(201).json({
       success: true,
       message: "Short URL created successfully",
       data: {
+        id: url.id,
         originalUrl: url.originalUrl,
         shortCode: url.shortCode,
         shortUrl: `http://localhost:5000/${url.shortCode}`,
+        clicks: url.clicks,
+        createdAt: url.createdAt,
       },
     });
   } catch (error) {
-    console.error("========== SHORTEN URL ERROR ==========");
-    console.error(error);
+    console.error("SHORTEN URL ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+// =====================================
+// Get My URLs
+// =====================================
+const getMyUrls = async (req, res) => {
+  try {
+    const urls = await prisma.url.findMany({
+      where: {
+        userId: req.user.id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: urls.length,
+      data: urls.map((url) => ({
+        id: url.id,
+        originalUrl: url.originalUrl,
+        shortCode: url.shortCode,
+        shortUrl: `http://localhost:5000/${url.shortCode}`,
+        clicks: url.clicks,
+        createdAt: url.createdAt,
+        expiresAt: url.expiresAt,
+      })),
+    });
+  } catch (error) {
+    console.error("GET URLS ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+// =====================================
+// Delete URL
+// =====================================
+const deleteUrl = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const url = await prisma.url.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!url) {
+      return res.status(404).json({
+        success: false,
+        message: "URL not found",
+      });
+    }
+
+    if (url.userId !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete this URL",
+      });
+    }
+
+    await prisma.url.delete({
+      where: {
+        id,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "URL deleted successfully",
+    });
+
+  } catch (error) {
+    console.error("DELETE URL ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -60,44 +139,27 @@ const redirectUrl = async (req, res) => {
   try {
     const { shortCode } = req.params;
 
-    console.log("\n========================================");
-    console.log("REDIRECT REQUEST RECEIVED");
-    console.log("Short Code:", shortCode);
-    console.log("========================================");
-
-    // Find URL
     const url = await prisma.url.findUnique({
       where: {
         shortCode,
       },
     });
 
-    console.log("Database Result:", url);
-
-    // URL not found
     if (!url) {
-      console.log("❌ URL NOT FOUND");
-
       return res.status(404).json({
         success: false,
         message: "Short URL not found",
       });
     }
 
-    // Check expiry
     if (url.expiresAt && new Date() > url.expiresAt) {
-      console.log("❌ URL EXPIRED");
-
       return res.status(410).json({
         success: false,
         message: "This short URL has expired",
       });
     }
 
-    console.log("Current Click Count:", url.clicks);
-
-    // Increment clicks
-    const updatedUrl = await prisma.url.update({
+    await prisma.url.update({
       where: {
         id: url.id,
       },
@@ -108,14 +170,9 @@ const redirectUrl = async (req, res) => {
       },
     });
 
-    console.log("Updated Click Count:", updatedUrl.clicks);
-    console.log("Redirecting To:", url.originalUrl);
-
     return res.redirect(302, url.originalUrl);
-
   } catch (error) {
-    console.error("========== REDIRECT ERROR ==========");
-    console.error(error);
+    console.error("REDIRECT URL ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -126,5 +183,7 @@ const redirectUrl = async (req, res) => {
 
 module.exports = {
   shortenUrl,
+  getMyUrls,
+  deleteUrl,
   redirectUrl,
 };
