@@ -63,14 +63,27 @@ const shortenUrl = async (req, res) => {
 };
 
 // =====================================
-// Get My URLs
+// Get My URLs (with Pagination)
 // =====================================
 const getMyUrls = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+
+    const skip = (page - 1) * limit;
+
+    const totalUrls = await prisma.url.count({
+      where: {
+        userId: req.user.id,
+      },
+    });
+
     const urls = await prisma.url.findMany({
       where: {
         userId: req.user.id,
       },
+      skip,
+      take: limit,
       orderBy: {
         createdAt: "desc",
       },
@@ -78,6 +91,9 @@ const getMyUrls = async (req, res) => {
 
     return res.status(200).json({
       success: true,
+      currentPage: page,
+      totalPages: Math.ceil(totalUrls / limit),
+      totalUrls,
       count: urls.length,
       data: urls.map((url) => ({
         id: url.id,
@@ -89,6 +105,7 @@ const getMyUrls = async (req, res) => {
         createdAt: url.createdAt,
       })),
     });
+
   } catch (error) {
     console.error("GET URLS ERROR:", error);
 
