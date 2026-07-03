@@ -6,7 +6,7 @@ const { nanoid } = require("nanoid");
 // =====================================
 const shortenUrl = async (req, res) => {
   try {
-    const { originalUrl, customAlias } = req.body;
+    const { originalUrl, customAlias, expiresAt } = req.body;
 
     if (!originalUrl) {
       return res.status(400).json({
@@ -15,10 +15,8 @@ const shortenUrl = async (req, res) => {
       });
     }
 
-    // Use custom alias if provided, otherwise generate one
     let shortCode = customAlias ? customAlias.trim() : nanoid(7);
 
-    // Check if short code already exists
     const existingUrl = await prisma.url.findUnique({
       where: {
         shortCode,
@@ -36,6 +34,7 @@ const shortenUrl = async (req, res) => {
       data: {
         originalUrl,
         shortCode,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
         userId: req.user.id,
       },
     });
@@ -49,6 +48,7 @@ const shortenUrl = async (req, res) => {
         shortCode: url.shortCode,
         shortUrl: `http://localhost:5000/${url.shortCode}`,
         clicks: url.clicks,
+        expiresAt: url.expiresAt,
         createdAt: url.createdAt,
       },
     });
@@ -85,12 +85,71 @@ const getMyUrls = async (req, res) => {
         shortCode: url.shortCode,
         shortUrl: `http://localhost:5000/${url.shortCode}`,
         clicks: url.clicks,
-        createdAt: url.createdAt,
         expiresAt: url.expiresAt,
+        createdAt: url.createdAt,
       })),
     });
   } catch (error) {
     console.error("GET URLS ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+// =====================================
+// Get URL Analytics
+// =====================================
+const getUrlAnalytics = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const url = await prisma.url.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!url) {
+      return res.status(404).json({
+        success: false,
+        message: "URL not found",
+      });
+    }
+
+    if (url.userId !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to view this URL",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: url.id,
+        originalUrl: url.originalUrl,
+        shortCode: url.shortCode,
+        shortUrl: `http://localhost:5000/${url.shortCode}`,
+        clicks: url.clicks,
+        createdAt: url.createdAt,
+        expiresAt: url.expiresAt,
+        user: url.user,
+      },
+    });
+  } catch (error) {
+    console.error("ANALYTICS ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -146,13 +205,7 @@ const updateUrl = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "URL updated successfully",
-      data: {
-        id: updatedUrl.id,
-        originalUrl: updatedUrl.originalUrl,
-        shortCode: updatedUrl.shortCode,
-        shortUrl: `http://localhost:5000/${updatedUrl.shortCode}`,
-        clicks: updatedUrl.clicks,
-      },
+      data: updatedUrl,
     });
   } catch (error) {
     console.error("UPDATE URL ERROR:", error);
@@ -263,6 +316,7 @@ const redirectUrl = async (req, res) => {
 module.exports = {
   shortenUrl,
   getMyUrls,
+  getUrlAnalytics,
   updateUrl,
   deleteUrl,
   redirectUrl,

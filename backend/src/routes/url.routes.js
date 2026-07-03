@@ -7,6 +7,7 @@ const authMiddleware = require("../middleware/auth.middleware");
 const {
   shortenUrl,
   getMyUrls,
+  getUrlAnalytics,
   updateUrl,
   deleteUrl,
   redirectUrl,
@@ -21,6 +22,9 @@ router.post("/shorten", authMiddleware, shortenUrl);
 
 // Get Logged-in User's URLs
 router.get("/my-urls", authMiddleware, getMyUrls);
+
+// Get Analytics of One URL
+router.get("/analytics/:id", authMiddleware, getUrlAnalytics);
 
 // Update URL
 router.put("/:id", authMiddleware, updateUrl);
