@@ -7,6 +7,7 @@ const authMiddleware = require("../middleware/auth.middleware");
 const {
   shortenUrl,
   getMyUrls,
+  updateUrl,
   deleteUrl,
   redirectUrl,
 } = require("../controllers/url.controller");
@@ -20,6 +21,9 @@ router.post("/shorten", authMiddleware, shortenUrl);
 
 // Get Logged-in User's URLs
 router.get("/my-urls", authMiddleware, getMyUrls);
+
+// Update URL
+router.put("/:id", authMiddleware, updateUrl);
 
 // Delete URL
 router.delete("/:id", authMiddleware, deleteUrl);

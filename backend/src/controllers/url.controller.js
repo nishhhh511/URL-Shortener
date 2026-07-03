@@ -6,7 +6,7 @@ const { nanoid } = require("nanoid");
 // =====================================
 const shortenUrl = async (req, res) => {
   try {
-    const { originalUrl } = req.body;
+    const { originalUrl, customAlias } = req.body;
 
     if (!originalUrl) {
       return res.status(400).json({
@@ -15,7 +15,22 @@ const shortenUrl = async (req, res) => {
       });
     }
 
-    const shortCode = nanoid(7);
+    // Use custom alias if provided, otherwise generate one
+    let shortCode = customAlias ? customAlias.trim() : nanoid(7);
+
+    // Check if short code already exists
+    const existingUrl = await prisma.url.findUnique({
+      where: {
+        shortCode,
+      },
+    });
+
+    if (existingUrl) {
+      return res.status(409).json({
+        success: false,
+        message: "Custom alias already exists",
+      });
+    }
 
     const url = await prisma.url.create({
       data: {
@@ -85,6 +100,71 @@ const getMyUrls = async (req, res) => {
 };
 
 // =====================================
+// Update URL
+// =====================================
+const updateUrl = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { originalUrl } = req.body;
+
+    if (!originalUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "Original URL is required",
+      });
+    }
+
+    const url = await prisma.url.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!url) {
+      return res.status(404).json({
+        success: false,
+        message: "URL not found",
+      });
+    }
+
+    if (url.userId !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to update this URL",
+      });
+    }
+
+    const updatedUrl = await prisma.url.update({
+      where: {
+        id,
+      },
+      data: {
+        originalUrl,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "URL updated successfully",
+      data: {
+        id: updatedUrl.id,
+        originalUrl: updatedUrl.originalUrl,
+        shortCode: updatedUrl.shortCode,
+        shortUrl: `http://localhost:5000/${updatedUrl.shortCode}`,
+        clicks: updatedUrl.clicks,
+      },
+    });
+  } catch (error) {
+    console.error("UPDATE URL ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+// =====================================
 // Delete URL
 // =====================================
 const deleteUrl = async (req, res) => {
@@ -121,7 +201,6 @@ const deleteUrl = async (req, res) => {
       success: true,
       message: "URL deleted successfully",
     });
-
   } catch (error) {
     console.error("DELETE URL ERROR:", error);
 
@@ -184,6 +263,7 @@ const redirectUrl = async (req, res) => {
 module.exports = {
   shortenUrl,
   getMyUrls,
+  updateUrl,
   deleteUrl,
   redirectUrl,
 };
