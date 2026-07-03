@@ -1,6 +1,6 @@
 const prisma = require("../config/prisma");
 const { nanoid } = require("nanoid");
-
+const QRCode = require("qrcode");
 // =====================================
 // Create Short URL
 // =====================================
@@ -100,6 +100,66 @@ const getMyUrls = async (req, res) => {
 };
 
 // =====================================
+// Search URLs
+// =====================================
+const searchUrls = async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        message: "Search query is required",
+      });
+    }
+
+    const urls = await prisma.url.findMany({
+      where: {
+        userId: req.user.id,
+        OR: [
+          {
+            originalUrl: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+          {
+            shortCode: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+        ],
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: urls.length,
+      data: urls.map((url) => ({
+        id: url.id,
+        originalUrl: url.originalUrl,
+        shortCode: url.shortCode,
+        shortUrl: `http://localhost:5000/${url.shortCode}`,
+        clicks: url.clicks,
+        expiresAt: url.expiresAt,
+        createdAt: url.createdAt,
+      })),
+    });
+
+  } catch (error) {
+    console.error("SEARCH URL ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+// =====================================
 // Get URL Analytics
 // =====================================
 const getUrlAnalytics = async (req, res) => {
@@ -158,6 +218,56 @@ const getUrlAnalytics = async (req, res) => {
   }
 };
 
+// =====================================
+// Generate QR Code
+// =====================================
+const generateQrCode = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const url = await prisma.url.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!url) {
+      return res.status(404).json({
+        success: false,
+        message: "URL not found",
+      });
+    }
+
+    if (url.userId !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to access this URL",
+      });
+    }
+
+    const shortUrl = `http://localhost:5000/${url.shortCode}`;
+
+    const qrCode = await QRCode.toDataURL(shortUrl);
+
+    return res.status(200).json({
+      success: true,
+      message: "QR Code generated successfully",
+      data: {
+        originalUrl: url.originalUrl,
+        shortUrl,
+        qrCode,
+      },
+    });
+
+  } catch (error) {
+    console.error("QR CODE ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
 // =====================================
 // Update URL
 // =====================================
@@ -316,7 +426,9 @@ const redirectUrl = async (req, res) => {
 module.exports = {
   shortenUrl,
   getMyUrls,
+  searchUrls,
   getUrlAnalytics,
+  generateQrCode,
   updateUrl,
   deleteUrl,
   redirectUrl,

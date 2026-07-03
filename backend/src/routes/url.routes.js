@@ -7,7 +7,9 @@ const authMiddleware = require("../middleware/auth.middleware");
 const {
   shortenUrl,
   getMyUrls,
+  searchUrls,
   getUrlAnalytics,
+  generateQrCode,
   updateUrl,
   deleteUrl,
   redirectUrl,
@@ -23,8 +25,11 @@ router.post("/shorten", authMiddleware, shortenUrl);
 // Get Logged-in User's URLs
 router.get("/my-urls", authMiddleware, getMyUrls);
 
-// Get Analytics of One URL
+// Get Analytics
 router.get("/analytics/:id", authMiddleware, getUrlAnalytics);
+router.get("/search", authMiddleware, searchUrls);
+// Generate QR Code
+router.get("/qr/:id", authMiddleware, generateQrCode);
 
 // Update URL
 router.put("/:id", authMiddleware, updateUrl);
@@ -36,7 +41,6 @@ router.delete("/:id", authMiddleware, deleteUrl);
 // Public Route
 // =====================================
 
-// Redirect Short URL
 router.get("/:shortCode", redirectUrl);
 
 module.exports = router;
