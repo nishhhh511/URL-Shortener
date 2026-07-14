@@ -1,32 +1,51 @@
-# LinkPilot - Production URL Shortener
+# 🚀 LinkPilot - Production URL Shortener
 
-LinkPilot is a full-stack SaaS-style URL shortener built with React, Express, Prisma, PostgreSQL, JWT authentication, QR codes, Swagger documentation, and Docker-ready backend deployment.
+LinkPilot is a production-ready full-stack SaaS-style URL shortener built with React, Express.js, Prisma ORM, PostgreSQL (Neon), JWT authentication, QR code generation, Swagger API documentation, and Docker. It allows users to securely create, manage, and analyze shortened URLs through a modern responsive dashboard.
 
-## Features
+## 🌐 Live Demo
+
+**Frontend:**  
+https://url-shortener-rose-tau.vercel.app
+
+**Backend API:**  
+https://urlshortener-pzs7.onrender.com
+
+**Swagger Documentation:**  
+https://urlshortener-pzs7.onrender.com/api-docs
+
+---
+
+## ✨ Features
 
 - User registration and login with JWT authentication
-- Protected dashboard with persisted login
+- Protected dashboard with persistent login sessions
 - Create, search, sort, copy, paginate, and delete short URLs
 - Public redirect endpoint with click tracking
-- QR code generation for every short link
-- Professional analytics page with Chart.js visualization
-- Responsive SaaS dashboard UI with loading states and empty states
-- Swagger API documentation at `/api-docs`
-- Production middleware: Helmet, rate limiting, compression, secure CORS, validation, and request logging
-- Deployment-ready configuration for Vercel, Render, Neon, and Docker
+- QR code generation for every short URL
+- Analytics dashboard with Chart.js visualization
+- Responsive SaaS dashboard UI
+- Loading states and empty states
+- Swagger API documentation
+- Secure backend with Helmet, Rate Limiting, Compression, Morgan Logging, Validation and CORS
+- Docker-ready backend deployment
+- Production deployment using Render, Vercel and Neon
 
-## Screenshots
+---
 
-Add screenshots after deployment:
+## 📸 Screenshots
+
+> Add screenshots after deployment.
 
 - `screenshots/login.png`
 - `screenshots/dashboard.png`
 - `screenshots/analytics.png`
 - `screenshots/swagger.png`
 
-## Tech Stack
+---
 
-**Frontend**
+## 🛠 Tech Stack
+
+### Frontend
 
 - React 19
 - Vite
@@ -36,13 +55,13 @@ Add screenshots after deployment:
 - React Icons
 - Chart.js
 
-**Backend**
+### Backend
 
 - Node.js
-- Express 5
+- Express.js 5
 - Prisma ORM
-- PostgreSQL / Neon
-- JWT
+- PostgreSQL (Neon)
+- JWT Authentication
 - bcrypt
 - Swagger UI
 - Helmet
@@ -50,52 +69,65 @@ Add screenshots after deployment:
 - Compression
 - Morgan
 
-## Architecture
+---
+
+## 🏗 Architecture
 
 ```text
-React + Vite frontend
-        |
-        | Axios with Bearer token
-        v
-Express REST API
-        |
-        | Prisma Client
-        v
-PostgreSQL / Neon
+                React + Vite
+             (Vercel Frontend)
+                     │
+                     │ Axios + JWT
+                     ▼
+            Express REST API
+           (Render Backend)
+                     │
+                Prisma ORM
+                     │
+                     ▼
+          Neon PostgreSQL Database
 ```
 
-## Folder Structure
+---
+
+## 📂 Folder Structure
 
 ```text
 URL-Shortener/
-  backend/
-    prisma/
-      schema.prisma
-      migrations/
-    src/
-      config/
-      controllers/
-      middleware/
-      routes/
-      services/
-      utils/
-    Dockerfile
-  frontend/
-    public/
-    src/
-      api/
-      components/
-      pages/
-      routes/
-      styles/
-    vercel.json
-  render.yaml
-  README.md
+│
+├── backend/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── migrations/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   └── utils/
+│   └── Dockerfile
+│
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── routes/
+│   │   └── styles/
+│   └── vercel.json
+│
+├── render.yaml
+├── README.md
+└── LICENSE
 ```
 
-## Installation
+---
 
-Clone the project and install dependencies:
+## ⚙️ Installation
+
+Clone the repository and install dependencies.
 
 ```bash
 cd backend
@@ -105,35 +137,40 @@ cd ../frontend
 npm install
 ```
 
-Create environment files:
+Create environment files.
 
 ```bash
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-Run Prisma migrations:
+Run Prisma migrations.
 
 ```bash
 cd backend
+
 npx prisma migrate deploy
+
 npx prisma generate
 ```
 
-Start the backend:
+Start the backend.
 
 ```bash
 npm run dev
 ```
 
-Start the frontend:
+Start the frontend.
 
 ```bash
 cd ../frontend
+
 npm run dev
 ```
 
-## Environment Variables
+---
+
+## 🔑 Environment Variables
 
 ### Backend
 
@@ -153,15 +190,21 @@ FRONTEND_URL=http://localhost:5173
 VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
-## API Documentation
+---
 
-Run the backend and open:
+## 📚 API Documentation
+
+### Production
+
+https://urlshortener-pzs7.onrender.com/api-docs
+
+### Local
 
 ```text
 http://localhost:5000/api-docs
 ```
 
-Main API groups:
+### Main API Groups
 
 - `POST /api/auth/register`
 - `POST /api/auth/login`
@@ -171,62 +214,102 @@ Main API groups:
 - `GET /api/url/search`
 - `GET /api/url/analytics/:id`
 - `GET /api/url/qr/:id`
+- `PUT /api/url/:id`
 - `DELETE /api/url/:id`
 - `GET /:shortCode`
 
-## Deployment
+---
 
-### Frontend - Vercel
+## ☁️ Deployment
+
+### Frontend — Vercel
 
 1. Import the `frontend` folder as the Vercel project root.
-2. Add `VITE_API_BASE_URL=https://your-render-service.onrender.com/api`.
-3. Deploy. `frontend/vercel.json` handles SPA refresh routes.
+2. Add:
 
-### Backend - Render
+```env
+VITE_API_BASE_URL=https://urlshortener-pzs7.onrender.com/api
+```
 
-1. Create a Render Web Service from the `backend` folder, or use `render.yaml`.
-2. Add production environment variables:
-   - `NODE_ENV=production`
-   - `DATABASE_URL`
-   - `JWT_SECRET`
-   - `JWT_EXPIRES_IN=7d`
-   - `BASE_URL=https://your-render-service.onrender.com`
-   - `FRONTEND_URL=https://your-vercel-app.vercel.app`
-3. Build command: `npm ci && npx prisma generate`
-4. Start command: `npx prisma migrate deploy && npm start`
+3. Deploy.
 
-### Database - Neon
+`frontend/vercel.json` handles SPA refresh routes.
 
-1. Create a Neon PostgreSQL database.
-2. Copy the pooled or direct connection string into `DATABASE_URL`.
-3. Keep `sslmode=require`.
-4. Run Prisma migrations during deployment.
+---
+
+### Backend — Render
+
+Create a Render Web Service from the `backend` folder.
+
+Environment Variables
+
+```env
+NODE_ENV=production
+DATABASE_URL=<your_neon_database_url>
+JWT_SECRET=<your_secret>
+JWT_EXPIRES_IN=7d
+BASE_URL=https://urlshortener-pzs7.onrender.com
+FRONTEND_URL=https://url-shortener-rose-tau.vercel.app
+```
+
+Build Command
+
+```bash
+npm ci && npx prisma generate
+```
+
+Start Command
+
+```bash
+npx prisma migrate deploy && npm start
+```
+
+---
+
+### Database — Neon
+
+- Create a PostgreSQL database.
+- Copy the connection string into `DATABASE_URL`.
+- Keep `sslmode=require`.
+- Run Prisma migrations during deployment.
+
+---
 
 ### Docker
 
-Build the backend image:
+Build the backend image.
 
 ```bash
 cd backend
+
 docker build -t linkpilot-api .
 ```
 
-Run with environment variables:
+Run the container.
 
 ```bash
 docker run -p 5000:5000 --env-file .env linkpilot-api
 ```
 
-## Future Improvements
+---
 
-- Add per-day click event tracking for richer analytics charts
-- Add custom aliases and expiry controls to the frontend form
-- Add user profile settings
-- Add team/workspace support
-- Add automated backend tests with Supertest
-- Add CI checks for lint, build, Prisma validation, and Docker build
+## 🚀 Future Improvements
 
-## License
+- Daily click history analytics
+- Custom aliases from the dashboard
+- Link expiry controls
+- User profile management
+- Team workspaces
+- Google OAuth Authentication
+- CI/CD using GitHub Actions
+- Automated backend testing with Supertest
+- Custom domains
+- Redis caching
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+---
 
+## 📄 License
+
+This project is licensed under the MIT License.
+
+See the [LICENSE](LICENSE) file for details.
