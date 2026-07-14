@@ -82,7 +82,11 @@ app.use("/api/user", userRoutes);
 app.use("/api/url", urlRoutes);
 
 // ================= Public Redirect =================
-app.get("/:shortCode", redirectUrl);
+const RESERVED_PATHS = new Set(["api-docs", "api", "favicon.ico"]);
+app.get("/:shortCode", (req, res, next) => {
+  if (RESERVED_PATHS.has(req.params.shortCode)) return next();
+  return redirectUrl(req, res, next);
+});
 
 // ================= Global Error Handler =================
 // This should always be the LAST middleware
