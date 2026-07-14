@@ -1,6 +1,15 @@
 const prisma = require("../config/prisma");
 const { nanoid } = require("nanoid");
 const QRCode = require("qrcode");
+
+const getBaseUrl = (req) => (
+  process.env.BASE_URL ||
+  `${req.protocol}://${req.get("host")}`
+);
+
+const buildShortUrl = (req, shortCode) => (
+  `${getBaseUrl(req)}/${shortCode}`
+);
 // =====================================
 // Create Short URL
 // =====================================
@@ -46,7 +55,7 @@ const shortenUrl = async (req, res) => {
         id: url.id,
         originalUrl: url.originalUrl,
         shortCode: url.shortCode,
-        shortUrl: `http://localhost:5000/${url.shortCode}`,
+        shortUrl: buildShortUrl(req, url.shortCode),
         clicks: url.clicks,
         expiresAt: url.expiresAt,
         createdAt: url.createdAt,
@@ -99,7 +108,7 @@ const getMyUrls = async (req, res) => {
         id: url.id,
         originalUrl: url.originalUrl,
         shortCode: url.shortCode,
-        shortUrl: `http://localhost:5000/${url.shortCode}`,
+        shortUrl: buildShortUrl(req, url.shortCode),
         clicks: url.clicks,
         expiresAt: url.expiresAt,
         createdAt: url.createdAt,
@@ -160,7 +169,7 @@ const searchUrls = async (req, res) => {
         id: url.id,
         originalUrl: url.originalUrl,
         shortCode: url.shortCode,
-        shortUrl: `http://localhost:5000/${url.shortCode}`,
+        shortUrl: buildShortUrl(req, url.shortCode),
         clicks: url.clicks,
         expiresAt: url.expiresAt,
         createdAt: url.createdAt,
@@ -218,7 +227,7 @@ const getUrlAnalytics = async (req, res) => {
         id: url.id,
         originalUrl: url.originalUrl,
         shortCode: url.shortCode,
-        shortUrl: `http://localhost:5000/${url.shortCode}`,
+        shortUrl: buildShortUrl(req, url.shortCode),
         clicks: url.clicks,
         createdAt: url.createdAt,
         expiresAt: url.expiresAt,
@@ -262,7 +271,7 @@ const generateQrCode = async (req, res) => {
       });
     }
 
-    const shortUrl = `http://localhost:5000/${url.shortCode}`;
+    const shortUrl = buildShortUrl(req, url.shortCode);
 
     const qrCode = await QRCode.toDataURL(shortUrl);
 

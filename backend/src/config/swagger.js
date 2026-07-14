@@ -10,9 +10,18 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:5000",
+        url: process.env.BASE_URL || "http://localhost:5000",
       },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
   },
   apis: ["./src/routes/*.js"],
 };
